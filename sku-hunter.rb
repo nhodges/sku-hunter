@@ -17,13 +17,15 @@ DOWNLOAD_DIR = "tmp"
 # This is where the magic happens
 #
 
+require 'csv'
 require 'open-uri'
 
-if !ARGV[0].nil? and !ARGV[1].nil?
+def fetch_and_save_all(skus)
   @failures = []
-  for sku in ARGV[0] .. ARGV[1]
+  skus.each do |sku|
     url = TEMPLATE_URL.gsub '{{sku}}', sku
     begin
+      puts url
       www = open(url).read
     rescue OpenURI::HTTPError
       @failures << sku
@@ -35,6 +37,14 @@ if !ARGV[0].nil? and !ARGV[1].nil?
   end
   puts "All done! We had #{@failures.length} failures."
   puts @failures if @failures.length > 0
+end
+
+if !ARGV[0].nil? and !ARGV[1].nil?
+  fetch_and_save_all(ARGV[0] .. ARGV[1])
 else
-  puts "Requires input of starting and stopping points."
+  csv = CSV.read("input.csv")
+  csv.collect! { |row|
+    row[1]
+  }
+  fetch_and_save_all(csv)
 end
